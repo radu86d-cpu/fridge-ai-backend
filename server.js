@@ -64,8 +64,8 @@ ${text}
     aiText = aiText.replace(/```json/g, "").replace(/```/g, "").trim();
 
     const parsed = JSON.parse(aiText);
-
     res.json({ result: parsed });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Parsing failed" });
@@ -73,12 +73,14 @@ ${text}
 });
 
 /* ===============================
-   GENERATE RECIPES (PRODUCTION)
+   GENERATE RECIPES (UPGRADED AI)
 ================================ */
 
 app.post("/generate-recipes", async (req, res) => {
   try {
-    const { items, mustUse = [] } = req.body;
+    const { items, mustUse = [], preferences = {} } = req.body;
+
+    const { experience, category, cuisine } = preferences;
 
     const inventoryText = items
       .map((i) => `- ${i.name}: ${i.quantity} ${i.unit}`)
@@ -99,15 +101,37 @@ Nu exista ingrediente obligatorii.
 Genereaza retete variate.
 `;
 
+    const preferenceBlock = `
+CERINTE STIL:
+
+Experienta culinara: ${experience ?? "fara restrictii"}
+Categorie preparat: ${category ?? "fara restrictii"}
+Stil gastronomic: ${cuisine ?? "fara restrictii"}
+
+Reguli pentru stil:
+- Respecta STRICT cerintele daca sunt specificate.
+- Daca este "Premium", foloseste plating sofisticat si tehnici avansate.
+- Daca este "Rapid", retetele trebuie sa fie sub 30 minute.
+- Daca este "Healthy", foloseste tehnici dietetice.
+- Daca este "Supă", toate retetele trebuie sa fie supe.
+- Daca este "Desert", toate retetele trebuie sa fie deserturi.
+- Daca este specificata o bucatarie (ex: Romaneasca), respecta ingredientele si tehnicile specifice acelei bucatarii.
+`;
+
     const prompt = `
-Esti un bucatar profesionist.
+Esti un bucatar profesionist cu experienta internationala.
 
 Genereaza EXACT 5 retete diferite.
 
-Reguli:
+${mandatoryText}
+
+${preferenceBlock}
+
+Reguli generale:
 1. Foloseste DOAR ingredientele din inventar + ingrediente de baza.
-2. ${mandatoryText}
+2. Nu inventa ingrediente care nu exista in inventar.
 3. Returneaza STRICT JSON valid.
+4. Nu adauga explicatii sau text suplimentar.
 
 Ingrediente de baza permise:
 ${BASE_PANTRY.join(", ")}
@@ -136,7 +160,7 @@ Format STRICT:
     const response = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
-      temperature: 1.1, // 🔥 RANDOM REAL
+      temperature: 1.0,
     });
 
     let aiText = response.choices[0]?.message?.content ?? "[]";
@@ -145,7 +169,7 @@ Format STRICT:
     let parsed = JSON.parse(aiText);
 
     // =============================
-    // VALIDARE SERVER (ANTI-TRISAT)
+    // VALIDARE SERVER
     // =============================
 
     if (mustUse.length > 0) {
@@ -163,6 +187,7 @@ Format STRICT:
     }
 
     res.json({ recipes: parsed });
+
   } catch (error) {
     console.error(error);
     res.status(500).json({ error: "Recipe generation failed" });
