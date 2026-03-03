@@ -78,9 +78,17 @@ ${text}
 
 app.post("/generate-recipes", async (req, res) => {
   try {
-    const { items, mustUse = [], preferences = {} } = req.body;
+    const { items, mustUse = [], preferences = {}, filters = {} } = req.body;
+    if (!items || items.length === 0) {
+  return res.json({ recipes: [] });
+}
 
-    const { experience, category, cuisine } = preferences;
+    const experience = filters.experience?.length
+  ? filters.experience.join(", ")
+  : null;
+
+const category = filters.mealType ?? null;
+const cuisine = filters.cuisine ?? null;
 
     const inventoryText = items
       .map((i) => `- ${i.name}: ${i.quantity} ${i.unit}`)
@@ -110,12 +118,9 @@ Stil gastronomic: ${cuisine ?? "fara restrictii"}
 
 Reguli pentru stil:
 - Respecta STRICT cerintele daca sunt specificate.
-- Daca este "Premium", foloseste plating sofisticat si tehnici avansate.
-- Daca este "Rapid", retetele trebuie sa fie sub 30 minute.
-- Daca este "Healthy", foloseste tehnici dietetice.
-- Daca este "Supă", toate retetele trebuie sa fie supe.
-- Daca este "Desert", toate retetele trebuie sa fie deserturi.
-- Daca este specificata o bucatarie (ex: Romaneasca), respecta ingredientele si tehnicile specifice acelei bucatarii.
+- Daca exista mai multe experiente selectate, combina stilurile armonios.
+- Daca este selectata o categorie, toate retetele trebuie sa apartina acelei categorii.
+- Daca este selectata o bucatarie, foloseste tehnici si ingrediente specifice acelei bucatarii.
 `;
 
     const prompt = `
@@ -196,4 +201,5 @@ Format STRICT:
 
 app.listen(3000, () => {
   console.log("Server running on port 3000");
+
 });
