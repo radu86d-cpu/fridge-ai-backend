@@ -137,6 +137,14 @@ Reguli generale:
 2. Nu inventa ingrediente care nu exista in inventar.
 3. Returneaza STRICT JSON valid.
 4. Nu adauga explicatii sau text suplimentar.
+5. Explica pasii EXTREM de clar si detaliat, ca si cum ai explica unui copil de 10 ani.
+6. Fiecare pas trebuie sa fie foarte specific:
+   - mentioneaza temperatura exacta
+   - mentioneaza timpul exact
+   - explica cum arata ingredientele cand sunt gata
+   - explica ce inseamna termeni precum "soteaza", "rumeneste", "caleste"
+7. Nu presupune cunostinte culinare avansate.
+8. Foloseste propozitii clare si simple.
 
 Ingrediente de baza permise:
 ${BASE_PANTRY.join(", ")}
@@ -203,3 +211,4 @@ app.listen(3000, () => {
   console.log("Server running on port 3000");
 
 });
+
